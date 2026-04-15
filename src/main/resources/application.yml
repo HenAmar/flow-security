@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/flowsecurity
+    username: flowuser
+    password: flowpass
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+flow:
+  sensitive-types:
+    - FIRST_NAME
+    - LAST_NAME
+    - CREDIT_CARD_NUMBER
+    - SOCIAL_SECURITY_NUMBER
+  queue-key: events:queue
+  processing-key: events:processing
+  flow-key-prefix: "flow:"
+  public-services-key: public_services
