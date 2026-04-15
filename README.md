@@ -2,6 +2,10 @@
 
 A system that monitors data flows between services, detects new sensitive data flows, and fires alerts with appropriate severity based on service exposure.
 
+## Language Choice
+
+Go would arguably be a better fit for this type of high-throughput event processing system — lightweight goroutines, built-in concurrency primitives, and lower memory footprint. However, I chose **Java with Spring Boot** deliberately to leverage its mature ecosystem for handling edge cases: reliable queue patterns, crash recovery, graceful shutdown hooks, and clear separation of concerns through dependency injection and interfaces. The focus here was on correctness and production-readiness over raw performance.
+
 ## System Design
 
 ```
