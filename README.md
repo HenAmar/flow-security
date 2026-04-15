@@ -132,6 +132,23 @@ Storage is bounded by `services² × sensitive_types` (~40K entries max, ~4MB). 
 | Redis dead | Dedup lost → may re-fire some alerts (minor alert fatigue) | Acceptable |
 | PG dead | Redis cache still serves, no impact on hot path | Config stale |
 
+## Known Trade-off: Race Condition in Dedup
+
+The current dedup logic uses two separate Redis calls — `SISMEMBER` (check) then `SADD` (mark):
+
+```java
+if (!redis.opsForSet().isMember(flowKey, dataType)) {   // check
+    alertDispatcher.dispatch(alert);                      // alert first
+    redis.opsForSet().add(flowKey, dataType);             // mark seen
+}
+```
+
+With a **single worker thread** (current design), this is safe — no concurrent access. However, with multiple workers, two threads could both read "not seen" before either writes, causing a **duplicate alert**.
+
+The atomic alternative — `SADD` first, alert if return value is 1 — eliminates the race but introduces a different risk: if the app crashes after `SADD` but before alerting, the alert is **lost forever** (marked as seen but never dispatched).
+
+I chose **correctness over dedup** — it's better to occasionally duplicate an alert than to silently lose one. For multiple workers, this can be solved with a Redis Lua script that atomically checks, marks, and returns the result in a single operation.
+
 ## Quick Start
 
 ```bash
